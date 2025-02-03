@@ -1,20 +1,23 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { BangladeshMap } from './components/BangladeshMap';
 
 function App() {
   const [visitedDistricts, setVisitedDistricts] = useState<Set<string>>(new Set());
+  const [visitedOrder, setVisitedOrder] = useState<string[]>([]);
 
-  const handleDistrictClick = (districtId: string) => {
+  const handleDistrictClick = useCallback((districtId: string) => {
     setVisitedDistricts(prev => {
       const newSet = new Set(prev);
       if (newSet.has(districtId)) {
         newSet.delete(districtId);
+        setVisitedOrder(prev => prev.filter(id => id !== districtId));
       } else {
         newSet.add(districtId);
+        setVisitedOrder(prev => [...prev, districtId]);
       }
       return newSet;
     });
-  };
+  }, []);
 
   return (
     <div className='min-h-screen bg-gray-100 py-8'>
@@ -23,6 +26,7 @@ function App() {
           <BangladeshMap
             onDistrictClick={handleDistrictClick}
             visitedDistricts={visitedDistricts}
+            visitedOrder={visitedOrder}
           />
         </div>
       </div>

@@ -6,10 +6,12 @@ import html2canvas from 'html2canvas-pro';
 interface BangladeshMapProps {
   onDistrictClick: (districtId: string) => void;
   visitedDistricts: Set<string>;
+  visitedOrder?: string[];
 }
 export const BangladeshMap = ({
   onDistrictClick,
   visitedDistricts,
+  visitedOrder = [],
 }: BangladeshMapProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -89,16 +91,22 @@ export const BangladeshMap = ({
 
     // Replace the text labels and hover effects with popover
     districts
-      .on('mouseover', function (this: SVGPathElement, event: MouseEvent, d: DistrictFeature) {
-        d3.select(this).attr('fill', visitedDistricts.has(d.id) ? '#45a049' : '#d1d5db');
-        const [x, y] = d3.pointer(event, containerRef.current);
-        setPopover({
-          x,
-          y,
-          name: d.properties.ADM2_EN,
-          visible: true,
-        });
-      })
+      .on(
+        'mouseover',
+        function (this: SVGPathElement, event: MouseEvent, d: DistrictFeature) {
+          d3.select(this).attr(
+            'fill',
+            visitedDistricts.has(d.id) ? '#45a049' : '#d1d5db'
+          );
+          const [x, y] = d3.pointer(event, containerRef.current);
+          setPopover({
+            x,
+            y,
+            name: d.properties.ADM2_EN,
+            visible: true,
+          });
+        }
+      )
       .on('mouseout', function (this: SVGPathElement, _, d: DistrictFeature) {
         d3.select(this).attr('fill', visitedDistricts.has(d.id) ? '#4CAF50' : '#e5e7eb');
         setPopover(prev => ({ ...prev, visible: false }));
@@ -112,17 +120,21 @@ export const BangladeshMap = ({
           svg
             .append('text')
             .attr('x', centroid[0])
-            .attr('y', centroid[1]) // Offset checkmark below the district name
+            .attr('y', centroid[1])
             .attr('text-anchor', 'middle')
             .attr('dominant-baseline', 'middle')
-            .attr('class', 'text-white text-sm')
-            .text('✓');
+            .attr('class', 'text-white text-sm cursor-pointer')
+            .text('✓')
+            .on('click', () => {
+              onDistrictClick(feature.id);
+              setPopover(prev => ({ ...prev, visible: false }));
+            });
         }
       });
     }
   }, [geoData, visitedDistricts, onDistrictClick, dimensions]);
 
-  // Add new function to handle screenshot
+  // Updated function to handle sharing
   const handleShareClick = async () => {
     try {
       // Hide the share button temporarily
@@ -149,10 +161,31 @@ export const BangladeshMap = ({
         }, 'image/png');
       });
 
-      // Create file object and trigger download
-      const file = new File([blob], 'bangladesh-districts-visited.png', {
+      // Create file object
+      const file = new File([blob], 'bangladesh-districts.png', {
         type: 'image/png',
       });
+
+      // Try Web Share API first if supported
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({
+            title: 'My Visited Districts in Bangladesh',
+            text: `I've visited ${visitedDistricts.size} districts in Bangladesh (${progress}%)!\n\nCount yours at: ${window.location.href}`,
+            files: [file],
+          });
+          return;
+        } catch (error) {
+          // User cancelled or share failed - fall through to download method
+          console.log('Share failed:', error);
+        }
+      }
+
+      // Fall back to download method
       const link = document.createElement('a');
       link.href = URL.createObjectURL(file);
       link.download = file.name;
@@ -173,7 +206,7 @@ export const BangladeshMap = ({
       {/* Progress Section */}
       <div className='space-y-2'>
         <div className='flex justify-between items-center'>
-          <h2 className='text-lg font-semibold text-gray-700'>Districts Visited</h2>
+          <h2 className='text-lg font-semibold text-gray-700'></h2>
           <span className='text-sm font-medium text-gray-600'>
             {visitedDistricts.size} / {geoData?.features.length || 0} ({progress}%)
           </span>
@@ -201,7 +234,7 @@ export const BangladeshMap = ({
         {/* Add popover */}
         {popover.visible && (
           <div
-            className='bg-white absolute text-gray-800 px-4 py-2 rounded-full shadow-xl text-sm pointer-events-none border border-gray-100'
+            className='bg-white absolute text-gray-800 px-2 py-1 rounded-full shadow-xl text-xs pointer-events-none border border-gray-100'
             style={{
               left: popover.x,
               top: popover.y - 50,
@@ -216,14 +249,21 @@ export const BangladeshMap = ({
       {/* Visited Districts List */}
       {visitedDistricts.size > 0 && (
         <div className='mt-6 p-4 bg-gray-50 rounded-lg'>
-          <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2'>
-            {geoData?.features
-              .filter(district => visitedDistricts.has(district.id))
-              .map(district => (
-                <div key={district.id} className='text-sm text-gray-600'>
-                  {district.properties.ADM2_EN}
-                </div>
-              ))}
+          <div className='flex flex-wrap justify-center gap-2'>
+            {visitedOrder
+              .filter(id => visitedDistricts.has(id))
+              .map(id => {
+                const district = geoData?.features.find(d => d.id === id);
+                console.log({ id: district?.id });
+                return district ? (
+                  <div
+                    key={district.id}
+                    className='px-3 py-1 text-sm text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200 shadow-sm'
+                  >
+                    {district.properties.ADM2_EN}
+                  </div>
+                ) : null;
+              })}
           </div>
         </div>
       )}
