@@ -254,7 +254,6 @@ export const BangladeshMap = ({
               .filter(id => visitedDistricts.has(id))
               .map(id => {
                 const district = geoData?.features.find(d => d.id === id);
-                console.log({ id: district?.id });
                 return district ? (
                   <div
                     key={district.id}
