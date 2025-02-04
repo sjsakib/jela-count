@@ -25,6 +25,9 @@ export const BangladeshMap = ({
     visible: boolean;
   }>({ x: 0, y: 0, name: '', visible: false });
 
+  // Add this constant near the top of the component
+  const isCompactMode = visitedDistricts.size > 20;
+
   // Calculate progress
   const progress = geoData
     ? Math.round((visitedDistricts.size / geoData.features.length) * 100)
@@ -69,7 +72,10 @@ export const BangladeshMap = ({
       .enter()
       .append('path')
       .attr('d', path)
-      .attr('class', d => `district cursor-pointer ${visitedDistricts.has(d.id) ? 'visited' : ''}`)
+      .attr(
+        'class',
+        d => `district cursor-pointer ${visitedDistricts.has(d.id) ? 'visited' : ''}`
+      )
       .attr('fill', d => (visitedDistricts.has(d.id) ? '#4CAF50' : '#e5e7eb'))
       .attr('stroke', '#fff')
       .attr('stroke-width', '0.5')
@@ -250,8 +256,12 @@ export const BangladeshMap = ({
 
       {/* Visited Districts List */}
       {visitedDistricts.size > 0 && (
-        <div className='mt-6 p-4 bg-gray-50 rounded-lg'>
-          <div className='flex flex-wrap justify-center gap-2'>
+        <div className={`mt-6 ${isCompactMode ? '' : 'p-4 bg-gray-50'} rounded-lg`}>
+          <div
+            className={`flex flex-wrap justify-center ${
+              isCompactMode ? 'gap-0' : 'gap-2'
+            }`}
+          >
             {visitedOrder
               .filter(id => visitedDistricts.has(id))
               .map(id => {
@@ -259,7 +269,11 @@ export const BangladeshMap = ({
                 return district ? (
                   <div
                     key={district.id}
-                    className='px-3 py-1 text-sm text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200 shadow-sm'
+                    className={`text-emerald-700 border border-emerald-200 shadow-sm ${
+                      isCompactMode
+                        ? 'text-xs px-1 py-0.5'
+                        : 'text-sm px-3 py-1 bg-emerald-50 rounded-full'
+                    }`}
                   >
                     {district.properties.ADM2_EN}
                   </div>
@@ -316,6 +330,5 @@ export const BangladeshMap = ({
         </button>
       </div>
     </div>
-    
   );
 };
