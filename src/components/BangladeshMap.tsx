@@ -187,8 +187,6 @@ export const BangladeshMap = ({
       ) {
         try {
           await navigator.share({
-            title: 'My Visited Districts in Bangladesh',
-            text: `I've visited ${visitedDistricts.size} districts in Bangladesh (${progress}%)!\n\nCount yours at: ${window.location.href}`,
             files: [file],
           });
           return;

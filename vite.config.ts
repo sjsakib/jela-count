@@ -6,6 +6,6 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    allowedHosts: ['jela-counter.pages.dev'],
+    allowedHosts: ['zillacounter.pages.dev'],
   },
 });
