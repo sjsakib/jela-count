@@ -143,10 +143,15 @@ export const BangladeshMap = ({
         shareButton.classList.add('hidden');
       }
 
-      // Create a canvas element
-      const canvas = await html2canvas(document.documentElement, {
-        scrollY: -window.scrollY,
-        windowHeight: document.documentElement.scrollHeight,
+      // Get the target element (the entire container)
+      const targetElement = containerRef.current?.parentElement?.parentElement;
+      if (!targetElement) return;
+
+      // Create a canvas element with the full content
+      const canvas = await html2canvas(targetElement, {
+        useCORS: true,
+        logging: false,
+        scale: 2, // Increase quality
       });
 
       // Show the share button again
@@ -233,7 +238,9 @@ export const BangladeshMap = ({
             </svg>
             <div className='absolute inset-0 flex flex-col items-center justify-center'>
               <span className='text-lg font-semibold text-gray-700'>{progress}%</span>
-              <span className='text-xs text-gray-500'>{visitedDistricts.size}/{geoData?.features.length || 0}</span>
+              <span className='text-xs text-gray-500'>
+                {visitedDistricts.size}/{geoData?.features.length || 0}
+              </span>
             </div>
           </div>
         </div>
@@ -282,8 +289,8 @@ export const BangladeshMap = ({
         </div>
       )}
 
-      {/* Share Button - Moved to bottom */}
-      <div className='flex justify-center mt-4'>
+      {/* Share Button */}
+      <div className='flex justify-center'>
         <button
           onClick={handleShareClick}
           data-share-button
