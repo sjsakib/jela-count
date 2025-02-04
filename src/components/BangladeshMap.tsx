@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { DistrictFeature, GeoJSONData } from '../types/district';
-import html2canvas from 'html2canvas-pro';
 import { districtsData } from '../data/districts';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface BangladeshMapProps {
   onDistrictClick: (districtId: string) => void;
@@ -24,6 +24,7 @@ export const BangladeshMap = ({
     name: string;
     visible: boolean;
   }>({ x: 0, y: 0, name: '', visible: false });
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   // Add this constant near the top of the component
   const isCompactMode = visitedDistricts.size > 20;
@@ -137,6 +138,8 @@ export const BangladeshMap = ({
     const watermark = document.querySelector('[data-watermark]');
 
     try {
+      setIsGeneratingImage(true);
+
       // Hide share button and show watermark
       if (shareButton) shareButton.classList.add('hidden');
       if (downloadButton) downloadButton.classList.add('hidden');
@@ -145,6 +148,9 @@ export const BangladeshMap = ({
       // Get the target element
       const targetElement = containerRef.current?.parentElement?.parentElement;
       if (!targetElement) return null;
+
+      // Dynamically import html2canvas
+      const html2canvas = (await import('html2canvas-pro')).default;
 
       // Generate canvas
       const canvas = await html2canvas(targetElement, {
@@ -163,6 +169,7 @@ export const BangladeshMap = ({
       console.error('Error generating image:', error);
       return null;
     } finally {
+      setIsGeneratingImage(false);
       // Restore UI state
       if (shareButton) shareButton.classList.remove('hidden');
       if (downloadButton) downloadButton.classList.remove('hidden');
@@ -289,16 +296,23 @@ export const BangladeshMap = ({
           <button
             onClick={handleShareClick}
             data-share-button
-            className='px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer'
+            disabled={isGeneratingImage}
+            className={`px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+              isGeneratingImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            }`}
           >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-5 w-5'
-              viewBox='0 0 20 20'
-              fill='currentColor'
-            >
-              <path d='M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z' />
-            </svg>
+            {isGeneratingImage ? (
+              <LoadingSpinner />
+            ) : (
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                className='h-5 w-5'
+                viewBox='0 0 20 20'
+                fill='currentColor'
+              >
+                <path d='M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z' />
+              </svg>
+            )}
           </button>
         )}
         <button
@@ -313,20 +327,27 @@ export const BangladeshMap = ({
             link.click();
             URL.revokeObjectURL(link.href);
           }}
-          className='px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer'
+          disabled={isGeneratingImage}
+          className={`px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+            isGeneratingImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          }`}
         >
-          <svg
-            xmlns='http://www.w3.org/2000/svg'
-            className='h-5 w-5'
-            viewBox='0 0 20 20'
-            fill='currentColor'
-          >
-            <path
-              fillRule='evenodd'
-              d='M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z'
-              clipRule='evenodd'
-            />
-          </svg>
+          {isGeneratingImage ? (
+            <LoadingSpinner />
+          ) : (
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-5 w-5'
+              viewBox='0 0 20 20'
+              fill='currentColor'
+            >
+              <path
+                fillRule='evenodd'
+                d='M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z'
+                clipRule='evenodd'
+              />
+            </svg>
+          )}
         </button>
       </div>
     </div>
