@@ -25,6 +25,7 @@ export const BangladeshMap = ({
     visible: boolean;
   }>({ x: 0, y: 0, name: '', visible: false });
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isLibraryLoading, setIsLibraryLoading] = useState(false);
 
   // Add this constant near the top of the component
   const isCompactMode = visitedDistricts.size > 20;
@@ -131,26 +132,27 @@ export const BangladeshMap = ({
   }, [geoData, visitedDistricts, onDistrictClick, dimensions]);
 
   // Updated function to handle sharing
-  // Shared function to generate image
   const generateImage = async () => {
     const shareButton = document.querySelector('[data-share-button]');
     const downloadButton = document.querySelector('[data-download-button]');
     const watermark = document.querySelector('[data-watermark]');
 
     try {
-      setIsGeneratingImage(true);
-
-      // Hide share button and show watermark
-      if (shareButton) shareButton.classList.add('hidden');
-      if (downloadButton) downloadButton.classList.add('hidden');
-      if (watermark) watermark.classList.remove('hidden');
+      setIsLibraryLoading(true);
 
       // Get the target element
       const targetElement = containerRef.current?.parentElement?.parentElement;
       if (!targetElement) return null;
 
+      // Hide share button and show watermark
+      if (shareButton) shareButton.classList.add('hidden');
+      if (downloadButton) downloadButton.classList.add('hidden');
+      if (watermark) watermark.classList.remove('hidden');
+      setIsGeneratingImage(true);
+
       // Dynamically import html2canvas
       const html2canvas = (await import('html2canvas-pro')).default;
+      setIsLibraryLoading(false);
 
       // Generate canvas
       const canvas = await html2canvas(targetElement, {
@@ -170,6 +172,7 @@ export const BangladeshMap = ({
       return null;
     } finally {
       setIsGeneratingImage(false);
+      setIsLibraryLoading(false);
       // Restore UI state
       if (shareButton) shareButton.classList.remove('hidden');
       if (downloadButton) downloadButton.classList.remove('hidden');
@@ -298,10 +301,10 @@ export const BangladeshMap = ({
             data-share-button
             disabled={isGeneratingImage}
             className={`px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
-              isGeneratingImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+              isGeneratingImage ? 'opacity-50 cursor-not-allowed hidden' : 'cursor-pointer'
             }`}
           >
-            {isGeneratingImage ? (
+            {isLibraryLoading ? (
               <LoadingSpinner />
             ) : (
               <svg
@@ -329,10 +332,10 @@ export const BangladeshMap = ({
           }}
           disabled={isGeneratingImage}
           className={`px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
-            isGeneratingImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            isGeneratingImage ? 'opacity-50 cursor-not-allowed hidden' : 'cursor-pointer'
           }`}
         >
-          {isGeneratingImage ? (
+          {isLibraryLoading ? (
             <LoadingSpinner />
           ) : (
             <svg
