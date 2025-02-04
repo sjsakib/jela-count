@@ -1,25 +1,25 @@
 export interface District {
-  id: number;
+  id: string;
   name: string;
   coordinates: [number, number];
   visited: boolean;
 }
 
 export interface DistrictFeature {
-  type: string;
-  id: number;
+  type: 'Feature';
+  id: string;
   properties: {
-    // name: string;
+    name: string;
     ADM1_EN: string; // division name
     ADM2_EN: string; // district name
   };
   geometry: {
-    type: string;
-    coordinates: number[][][] | number[][][][];
+    type: 'Polygon';
+    coordinates: number[][][];
   };
 }
 
 export interface GeoJSONData {
-  type: string;
+  type: 'FeatureCollection';
   features: DistrictFeature[];
 }

@@ -69,22 +69,13 @@ export const BangladeshMap = ({
       .enter()
       .append('path')
       .attr('d', path)
-      .attr('class', d => `district ${visitedDistricts.has(d.id) ? 'visited' : ''}`)
+      .attr('class', d => `district cursor-pointer ${visitedDistricts.has(d.id) ? 'visited' : ''}`)
       .attr('fill', d => (visitedDistricts.has(d.id) ? '#4CAF50' : '#e5e7eb'))
       .attr('stroke', '#fff')
       .attr('stroke-width', '0.5')
       .on('click', (_, d) => {
         onDistrictClick(d.id);
         setPopover(prev => ({ ...prev, visible: false }));
-      });
-
-    // Add hover effects
-    districts
-      .on('mouseover', function (this: SVGPathElement, _, d: DistrictFeature) {
-        d3.select(this).attr('fill', visitedDistricts.has(d.id) ? '#45a049' : '#d1d5db');
-      })
-      .on('mouseout', function (this: SVGPathElement, _, d: DistrictFeature) {
-        d3.select(this).attr('fill', visitedDistricts.has(d.id) ? '#4CAF50' : '#e5e7eb');
       });
 
     // Replace the text labels and hover effects with popover
@@ -284,7 +275,7 @@ export const BangladeshMap = ({
           <button
             onClick={handleShareClick}
             data-share-button
-            className='px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+            className='px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer'
           >
             <svg
               xmlns='http://www.w3.org/2000/svg'
@@ -308,7 +299,7 @@ export const BangladeshMap = ({
             link.click();
             URL.revokeObjectURL(link.href);
           }}
-          className='px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+          className='px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer'
         >
           <svg
             xmlns='http://www.w3.org/2000/svg'
@@ -324,18 +315,7 @@ export const BangladeshMap = ({
           </svg>
         </button>
       </div>
-
-      {/* GitHub Star Button */}
-      <div className='flex justify-center mt-4'>
-        <iframe
-          src='https://ghbtns.com/github-btn.html?user=sjsakib&repo=zillacounter&type=star&count=true&size=large'
-          frameBorder='0'
-          scrolling='0'
-          width='170'
-          height='30'
-          title='GitHub'
-        ></iframe>
-      </div>
     </div>
+    
   );
 };
