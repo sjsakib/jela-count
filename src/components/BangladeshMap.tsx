@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { DistrictFeature, GeoJSONData } from '../types/district';
 import html2canvas from 'html2canvas-pro';
+import { districtsData } from '../data/districts';
 
 interface BangladeshMapProps {
   onDistrictClick: (districtId: string) => void;
@@ -43,10 +44,7 @@ export const BangladeshMap = ({
   }, []);
 
   useEffect(() => {
-    // Load Bangladesh GeoJSON data
-    fetch('/bangladesh-districts.json')
-      .then(response => response.json())
-      .then(data => setGeoData(data));
+    setGeoData(districtsData);
   }, []);
 
   useEffect(() => {
@@ -135,82 +133,60 @@ export const BangladeshMap = ({
   }, [geoData, visitedDistricts, onDistrictClick, dimensions]);
 
   // Updated function to handle sharing
-  const handleShareClick = async () => {
+  // Shared function to generate image
+  const generateImage = async () => {
+    const shareButton = document.querySelector('[data-share-button]');
+    const downloadButton = document.querySelector('[data-download-button]');
+    const watermark = document.querySelector('[data-watermark]');
+
     try {
-      // Hide the share button temporarily
-      const shareButton = document.querySelector('[data-share-button]');
-      const watermark = document.querySelector('[data-watermark]');
-      if (shareButton) {
-        shareButton.classList.add('hidden');
-      }
-      // Show watermark
-      if (watermark) {
-        watermark.classList.remove('hidden');
-      }
+      // Hide share button and show watermark
+      if (shareButton) shareButton.classList.add('hidden');
+      if (downloadButton) downloadButton.classList.add('hidden');
+      if (watermark) watermark.classList.remove('hidden');
 
-      // Get the target element (the entire container)
+      // Get the target element
       const targetElement = containerRef.current?.parentElement?.parentElement;
-      if (!targetElement) return;
+      if (!targetElement) return null;
 
-      // Create a canvas element with the full content
+      // Generate canvas
       const canvas = await html2canvas(targetElement, {
         useCORS: true,
         logging: false,
-        scale: 3, // Increase quality
+        scale: 3,
       });
 
-      // Show the share button again and hide watermark
-      if (shareButton) {
-        shareButton.classList.remove('hidden');
-      }
-      if (watermark) {
-        watermark.classList.add('hidden');
-      }
-
-      // Convert canvas to blob
+      // Create blob
       const blob = await new Promise<Blob>(resolve => {
-        canvas.toBlob(blob => {
-          resolve(blob!);
-        }, 'image/png');
+        canvas.toBlob(blob => resolve(blob!), 'image/png');
       });
 
-      // Create file object
-      const file = new File([blob], 'bangladesh-districts.png', {
-        type: 'image/png',
-      });
-
-      // Try Web Share API first if supported
-      if (
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare({ files: [file] })
-      ) {
-        try {
-          await navigator.share({
-            files: [file],
-          });
-          return;
-        } catch (error) {
-          // User cancelled or share failed - fall through to download method
-          console.log('Share failed:', error);
-        }
-      }
-
-      // Fall back to download method
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(file);
-      link.download = file.name;
-      link.click();
-      URL.revokeObjectURL(link.href);
+      return new File([blob], 'bangladesh-districts.png', { type: 'image/png' });
     } catch (error) {
-      console.error('Error generating screenshot:', error);
-      // Ensure share button is visible even if there's an error
-      const shareButton = document.querySelector('[data-share-button]');
-      if (shareButton) {
-        shareButton.classList.remove('invisible');
+      console.error('Error generating image:', error);
+      return null;
+    } finally {
+      // Restore UI state
+      if (shareButton) shareButton.classList.remove('hidden');
+      if (downloadButton) downloadButton.classList.remove('hidden');
+      if (watermark) watermark.classList.add('hidden');
+    }
+  };
+
+  const handleShareClick = async () => {
+    const file = await generateImage();
+    if (!file) return;
+
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+      } catch (error) {
+        console.error('Share failed:', error);
       }
     }
   };
+
+  const canShare = !!navigator.share && !!navigator.canShare;
 
   return (
     <div className='space-y-4 bg-white rounded-lg'>
@@ -302,15 +278,63 @@ export const BangladeshMap = ({
         </div>
       )}
 
-      {/* Share Button */}
-      <div className='flex justify-center'>
+      {/* Share/Save Buttons */}
+      <div className='flex justify-center gap-2'>
+        {canShare && (
+          <button
+            onClick={handleShareClick}
+            data-share-button
+            className='px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-5 w-5'
+              viewBox='0 0 20 20'
+              fill='currentColor'
+            >
+              <path d='M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z' />
+            </svg>
+          </button>
+        )}
         <button
-          onClick={handleShareClick}
-          data-share-button
+          data-download-button
+          onClick={async () => {
+            const file = await generateImage();
+            if (!file) return;
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(file);
+            link.download = file.name;
+            link.click();
+            URL.revokeObjectURL(link.href);
+          }}
           className='px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
         >
-          Share
+          <svg
+            xmlns='http://www.w3.org/2000/svg'
+            className='h-5 w-5'
+            viewBox='0 0 20 20'
+            fill='currentColor'
+          >
+            <path
+              fillRule='evenodd'
+              d='M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z'
+              clipRule='evenodd'
+            />
+          </svg>
         </button>
+      </div>
+
+      {/* GitHub Star Button */}
+      <div className='flex justify-center mt-4'>
+        <iframe
+          src='https://ghbtns.com/github-btn.html?user=sjsakib&repo=zillacounter&type=star&count=true&size=large'
+          frameBorder='0'
+          scrolling='0'
+          width='170'
+          height='30'
+          title='GitHub'
+        ></iframe>
       </div>
     </div>
   );
