@@ -139,8 +139,13 @@ export const BangladeshMap = ({
     try {
       // Hide the share button temporarily
       const shareButton = document.querySelector('[data-share-button]');
+      const watermark = document.querySelector('[data-watermark]');
       if (shareButton) {
         shareButton.classList.add('hidden');
+      }
+      // Show watermark
+      if (watermark) {
+        watermark.classList.remove('hidden');
       }
 
       // Get the target element (the entire container)
@@ -151,12 +156,15 @@ export const BangladeshMap = ({
       const canvas = await html2canvas(targetElement, {
         useCORS: true,
         logging: false,
-        scale: 2, // Increase quality
+        scale: 3, // Increase quality
       });
 
-      // Show the share button again
+      // Show the share button again and hide watermark
       if (shareButton) {
         shareButton.classList.remove('hidden');
+      }
+      if (watermark) {
+        watermark.classList.add('hidden');
       }
 
       // Convert canvas to blob
@@ -210,6 +218,13 @@ export const BangladeshMap = ({
     <div className='space-y-4 bg-white rounded-lg'>
       {/* Map Container */}
       <div ref={containerRef} className='relative w-full max-w-[600px] mx-auto'>
+        {/* Watermark - hidden by default */}
+        <div
+          data-watermark
+          className='hidden absolute bottom-2 left-1/2 transform -translate-x-1/2 text-gray-400 text-sm opacity-50'
+        >
+          zillacounter.pages.dev
+        </div>
         {/* Circular Progress Indicator */}
         <div className='absolute right-[20%] w-24 h-24'>
           <div className='relative w-full h-full'>
