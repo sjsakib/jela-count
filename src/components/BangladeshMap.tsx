@@ -203,26 +203,41 @@ export const BangladeshMap = ({
 
   return (
     <div className='space-y-4 bg-white rounded-lg'>
-      {/* Progress Section */}
-      <div className='space-y-2'>
-        <div className='flex justify-between items-center'>
-          <h2 className='text-lg font-semibold text-gray-700'></h2>
-          <span className='text-sm font-medium text-gray-600'>
-            {visitedDistricts.size} / {geoData?.features.length || 0} ({progress}%)
-          </span>
-        </div>
-
-        {/* Progress Bar */}
-        <div className='w-full h-2.5 bg-gray-200 rounded-full overflow-hidden'>
-          <div
-            className='h-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-300 ease-in-out'
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-
       {/* Map Container */}
       <div ref={containerRef} className='relative w-full max-w-[600px] mx-auto'>
+        {/* Circular Progress Indicator */}
+        <div className='absolute right-[20%] w-24 h-24'>
+          <div className='relative w-full h-full'>
+            <svg className='w-full h-full transform -rotate-90'>
+              <circle
+                className='text-gray-200'
+                strokeWidth='8'
+                stroke='currentColor'
+                fill='transparent'
+                r='40'
+                cx='48'
+                cy='48'
+              />
+              <circle
+                className='text-green-500'
+                strokeWidth='8'
+                strokeLinecap='round'
+                stroke='currentColor'
+                fill='transparent'
+                r='40'
+                cx='48'
+                cy='48'
+                strokeDasharray={`${2 * Math.PI * 40}`}
+                strokeDashoffset={`${2 * Math.PI * 40 * (1 - progress / 100)}`}
+              />
+            </svg>
+            <div className='absolute inset-0 flex flex-col items-center justify-center'>
+              <span className='text-lg font-semibold text-gray-700'>{progress}%</span>
+              <span className='text-xs text-gray-500'>{visitedDistricts.size}/{geoData?.features.length || 0}</span>
+            </div>
+          </div>
+        </div>
+
         <svg
           ref={svgRef}
           width={dimensions.width}
