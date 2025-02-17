@@ -1,9 +1,28 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { BangladeshMap } from './components/BangladeshMap';
 
+// Storage keys
+const VISITED_DISTRICTS_KEY = 'visitedDistricts';
+const VISITED_ORDER_KEY = 'visitedOrder';
+
 function App() {
-  const [visitedDistricts, setVisitedDistricts] = useState<Set<string>>(new Set());
-  const [visitedOrder, setVisitedOrder] = useState<string[]>([]);
+  const [visitedDistricts, setVisitedDistricts] = useState<Set<string>>(() => {
+    // Load initial state from localStorage
+    const saved = localStorage.getItem(VISITED_DISTRICTS_KEY);
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  const [visitedOrder, setVisitedOrder] = useState<string[]>(() => {
+    // Load initial order from localStorage
+    const saved = localStorage.getItem(VISITED_ORDER_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Save to localStorage whenever state changes
+  useEffect(() => {
+    localStorage.setItem(VISITED_DISTRICTS_KEY, JSON.stringify([...visitedDistricts]));
+    localStorage.setItem(VISITED_ORDER_KEY, JSON.stringify(visitedOrder));
+  }, [visitedDistricts, visitedOrder]);
 
   const handleDistrictClick = useCallback((districtId: string) => {
     setVisitedDistricts(prev => {
