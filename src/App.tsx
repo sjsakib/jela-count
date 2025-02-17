@@ -38,6 +38,11 @@ function App() {
     });
   }, []);
 
+  const resetDistricts = useCallback(() => {
+    setVisitedDistricts(new Set());
+    setVisitedOrder([]);
+  }, []);
+
   return (
     <div className='min-h-screen bg-gray-100 py-8'>
       <div className='container mx-auto px-4'>
@@ -46,6 +51,7 @@ function App() {
             onDistrictClick={handleDistrictClick}
             visitedDistricts={visitedDistricts}
             visitedOrder={visitedOrder}
+            resetDistricts={resetDistricts}
           />
         </div>
         <div className='flex justify-center mt-12'>

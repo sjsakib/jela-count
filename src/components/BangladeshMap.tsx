@@ -8,11 +8,13 @@ interface BangladeshMapProps {
   onDistrictClick: (districtId: string) => void;
   visitedDistricts: Set<string>;
   visitedOrder?: string[];
+  resetDistricts?: () => void;
 }
 export const BangladeshMap = ({
   onDistrictClick,
   visitedDistricts,
   visitedOrder = [],
+  resetDistricts,
 }: BangladeshMapProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -136,6 +138,7 @@ export const BangladeshMap = ({
     const shareButton = document.querySelector('[data-share-button]');
     const downloadButton = document.querySelector('[data-download-button]');
     const watermark = document.querySelector('[data-watermark]');
+    const resetButton = document.querySelector('[data-reset-button]');
 
     try {
       setIsLibraryLoading(true);
@@ -144,9 +147,10 @@ export const BangladeshMap = ({
       const targetElement = containerRef.current?.parentElement?.parentElement;
       if (!targetElement) return null;
 
-      // Hide share button and show watermark
+      // Hide buttons and show watermark
       if (shareButton) shareButton.classList.add('hidden');
       if (downloadButton) downloadButton.classList.add('hidden');
+      if (resetButton) resetButton.classList.add('hidden');
       if (watermark) watermark.classList.remove('hidden');
       setIsGeneratingImage(true);
 
@@ -176,6 +180,7 @@ export const BangladeshMap = ({
       // Restore UI state
       if (shareButton) shareButton.classList.remove('hidden');
       if (downloadButton) downloadButton.classList.remove('hidden');
+      if (resetButton) resetButton.classList.remove('hidden');
       if (watermark) watermark.classList.add('hidden');
     }
   };
@@ -199,6 +204,29 @@ export const BangladeshMap = ({
     <div className='space-y-4 bg-white rounded-lg'>
       {/* Map Container */}
       <div ref={containerRef} className='relative w-full max-w-[600px] mx-auto'>
+        {/* Reset Button - moved to top-right corner */}
+        {visitedDistricts.size > 0 && resetDistricts && (
+          <button
+            onClick={resetDistricts}
+            data-reset-button
+            className='absolute top-2 right-2 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-2 z-10 cursor-pointer'
+            title='Reset selections'
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-4 w-4'
+              viewBox='0 0 20 20'
+              fill='currentColor'
+            >
+              <path
+                fillRule='evenodd'
+                d='M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z'
+                clipRule='evenodd'
+              />
+            </svg>
+          </button>
+        )}
+
         {/* Watermark - hidden by default */}
         <div
           data-watermark
@@ -301,7 +329,9 @@ export const BangladeshMap = ({
             data-share-button
             disabled={isGeneratingImage}
             className={`px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
-              isGeneratingImage ? 'opacity-50 cursor-not-allowed hidden' : 'cursor-pointer'
+              isGeneratingImage
+                ? 'opacity-50 cursor-not-allowed hidden'
+                : 'cursor-pointer'
             }`}
           >
             {isLibraryLoading ? (
